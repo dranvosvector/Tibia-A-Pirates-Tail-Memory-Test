@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seletor de Mapas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            min-height: 85vh;
+        }
+
+        .selection-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            font-weight: 300;
+            text-align: center;
+        }
+
+        .step {
+            margin-bottom: 25px;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .step.active {
+            opacity: 1;
+        }
+
+        .step.completed {
+            opacity: 0.7;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            line-height: 25px;
+            margin-right: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .option-btn.disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .option-btn.disabled .option-icon {
+            filter: grayscale(100%);
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+        }
+
+        .option-text {
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .result-content {
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            width: 100%;
+        }
+
+        .result-content.show {
+            opacity: 1;
+        }
+
+        .result-letter {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            max-height: 300px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .placeholder-text {
+            color: #999;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #c82333;
+        }
+
+        /* Responsividade para tablets */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 25px;
+            }
+            
+            .result-panel {
+                order: -1;
+                min-height: 250px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Responsividade para mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .main-container {
+                padding: 20px;
+                min-height: auto;
+            }
+            
+            .options {
+                justify-content: center;
+            }
+            
+            .option-btn {
+                min-width: 80px;
+                padding: 12px 15px;
+                font-size: 0.85rem;
+            }
+            
+            .option-icon {
+                font-size: 1.3rem;
+            }
+            
+            .result-image {
+                max-height: 200px;
+            }
+            
+            .step-title {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+            
+            .step {
+                margin-bottom: 20px;
+            }
+            
+            .option-btn {
+                min-width: 70px;
+                padding: 10px 12px;
+            }
+            
+            .result-letter {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Painel de Seleção -->
+        <div class="selection-panel">
+            <h1>Seletor de Mapas</h1>
+            
+            <!-- Passo 1: Objeto Base -->
+            <div class="step active" id="step1">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Diagonal de ...
+                </div>
+                <div class="options">
+                    <div class="option-btn" data-value="concha" onclick="selectOption(1, 'concha', this)">
+                        <div class="option-icon">🐚</div>
+                        <div class="option-text">Concha Cônica</div>
+                    </div>
+                    <div class="option-btn" data-value="estrela" onclick="selectOption(1, 'estrela', this)">
+                        <div class="option-icon">⭐</div>
+                        <div class="option-text">Estrela Amarela</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passo 2: Direção da Diagonal -->
+            <div class="step" id="step2">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Direção da Diagonal
+                </div>
+                <div class="options">
+                    <div class="option-btn" data-value="direita" onclick="selectOption(2, 'direita', this)">
+                        <div class="option-icon">↘</div>
+                        <div class="option-text">Direita</div>
+                    </div>
+                    <div class="option-btn" data-value="esquerda" onclick="selectOption(2, 'esquerda', this)">
+                        <div class="option-icon">↙</div>
+                        <div class="option-text">Esquerda</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passo 3: Objeto no Topo -->
+            <div class="step" id="step3">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Selecione o Objeto no Topo
+                </div>
+                <div class="options">
+                    <div class="option-btn" data-value="concha-branca" onclick="selectOption(3, 'concha-branca', this)">
+                        <div class="option-icon">🤍</div>
+                        <div class="option-text">Concha Branca</div>
+                    </div>
+                    <div class="option-btn" data-value="concha-conica" onclick="selectOption(3, 'concha-conica', this)">
+                        <div class="option-icon">🐚</div>
+                        <div class="option-text">Concha Cônica</div>
+                    </div>
+                    <div class="option-btn" data-value="estrela-amarela" onclick="selectOption(3, 'estrela-amarela', this)">
+                        <div class="option-icon">⭐</div>
+                        <div class="option-text">Estrela Amarela</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de Resultado -->
+        <div class="result-panel">
+            <div class="placeholder-text" id="placeholderText">
+                Faça suas seleções para ver o mapa resultante
+            </div>
+            
+            <div class="result-content" id="resultContent">
+                <div class="result-letter" id="resultLetter"></div>
+                <img class="result-image" id="resultImage" alt="Mapa resultante" style="display: none;">
+                <button class="reset-btn" onclick="resetSelection()">Recomeçar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis para armazenar as seleções
+        let selections = {
+            step1: null,
+            step2: null,
+            step3: null
+        };
+
+        // Mapeamento das combinações para letras
+        const combinations = {
+            'concha-direita-concha-branca': 'A',
+            'concha-esquerda-estrela-amarela': 'B',
+            'estrela-esquerda-concha-conica': 'C',
+            'estrela-esquerda-concha-branca': 'D',
+            'concha-direita-estrela-amarela': 'E',
+            'estrela-direita-concha-branca': 'F',
+            'estrela-direita-concha-conica': 'G',
+            'concha-esquerda-concha-branca': 'H'
+        };
+
+        // Função para verificar quais opções são válidas para o próximo passo
+        function getValidOptions(step) {
+            if (step === 1) {
+                // Primeiro passo: todas as opções são válidas
+                return ['concha', 'estrela'];
+            } else if (step === 2) {
+                // Segundo passo: todas as direções são válidas
+                return ['direita', 'esquerda'];
+            } else if (step === 3) {
+                // Terceiro passo: verificar quais combinações são válidas
+                const validOptions = [];
+                const step1Value = selections.step1;
+                const step2Value = selections.step2;
+                
+                const possibleStep3Values = ['concha-branca', 'concha-conica', 'estrela-amarela'];
+                
+                possibleStep3Values.forEach(step3Value => {
+                    const combinationKey = `${step1Value}-${step2Value}-${step3Value}`;
+                    if (combinations[combinationKey]) {
+                        validOptions.push(step3Value);
+                    }
+                });
+                
+                return validOptions;
+            }
+            return [];
+        }
+
+        // Função para atualizar o estado das opções (habilitar/desabilitar)
+        function updateOptionsState(step) {
+            const stepElement = document.getElementById(`step${step}`);
+            const options = stepElement.querySelectorAll('.option-btn');
+            const validOptions = getValidOptions(step);
+            
+            options.forEach(option => {
+                const value = option.getAttribute('data-value');
+                if (validOptions.includes(value)) {
+                    option.classList.remove('disabled');
+                    option.style.pointerEvents = 'auto';
+                } else {
+                    option.classList.add('disabled');
+                    option.style.pointerEvents = 'none';
+                }
+            });
+        }
+
+        function selectOption(step, value, element) {
+            // Verificar se a opção está desabilitada
+            if (element.classList.contains('disabled')) {
+                return;
+            }
+
+            // Remove seleção anterior do mesmo passo
+            const stepElement = document.getElementById(`step${step}`);
+            const previousSelected = stepElement.querySelector('.option-btn.selected');
+            if (previousSelected) {
+                previousSelected.classList.remove('selected');
+            }
+
+            // Adiciona seleção atual
+            element.classList.add('selected');
+            selections[`step${step}`] = value;
+
+            // Marca o passo como completo e ativa o próximo
+            stepElement.classList.add('completed');
+            
+            if (step < 3) {
+                const nextStep = document.getElementById(`step${step + 1}`);
+                nextStep.classList.add('active');
+                
+                // Atualizar estado das opções do próximo passo
+                updateOptionsState(step + 1);
+            }
+
+            // Se todos os passos foram completados, mostra o resultado
+            if (selections.step1 && selections.step2 && selections.step3) {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            // Cria a chave da combinação
+            const combinationKey = `${selections.step1}-${selections.step2}-${selections.step3}`;
+            const letter = combinations[combinationKey];
+
+            // Esconde o texto placeholder
+            const placeholderText = document.getElementById('placeholderText');
+            placeholderText.style.display = 'none';
+
+            // Mostra o resultado
+            const resultContent = document.getElementById('resultContent');
+            const resultLetter = document.getElementById('resultLetter');
+            const resultImage = document.getElementById('resultImage');
+
+            if (letter) {
+                resultLetter.textContent = `Mapa ${letter}`;
+                resultImage.src = `map${letter}.png`;
+                resultImage.style.display = 'block';
+            } else {
+                resultLetter.textContent = 'Combinação inválida';
+                resultImage.style.display = 'none';
+            }
+            
+            resultContent.classList.add('show');
+        }
+
+        function resetSelection() {
+            // Reset das seleções
+            selections = {
+                step1: null,
+                step2: null,
+                step3: null
+            };
+
+            // Reset dos elementos visuais
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.remove('selected', 'disabled');
+                btn.style.pointerEvents = 'auto';
+            });
+
+            document.getElementById('step1').classList.add('active');
+            
+            // Mostra placeholder e esconde resultado
+            document.getElementById('placeholderText').style.display = 'block';
+            document.getElementById('resultContent').classList.remove('show');
+            document.getElementById('resultImage').style.display = 'none';
+        }
+
+        // Inicializar o estado das opções
+        document.addEventListener('DOMContentLoaded', function() {
+            updateOptionsState(1);
+        });
+    </script>
+</body>
+</html>
+
