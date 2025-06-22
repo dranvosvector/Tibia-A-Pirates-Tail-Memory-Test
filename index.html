@@ -140,8 +140,9 @@
             filter: grayscale(100%);
         }
 
-        .option-icon {
-            font-size: 1.5rem;
+        .option-icon img {
+            width: 32px;
+            height: auto;
         }
 
         .option-text {
@@ -237,8 +238,8 @@
                 font-size: 0.85rem;
             }
             
-            .option-icon {
-                font-size: 1.3rem;
+            .option-icon img {
+                width: 28px;
             }
             
             .result-image {
@@ -289,11 +290,11 @@
                 </div>
                 <div class="options">
                     <div class="option-btn" data-value="concha" onclick="selectOption(1, 'concha', this)">
-                        <div class="option-icon">🐚</div>
+                        <div class="option-icon"><img src="ConchaConica.png" alt="Concha Cônica"></div>
                         <div class="option-text">Concha Cônica</div>
                     </div>
                     <div class="option-btn" data-value="estrela" onclick="selectOption(1, 'estrela', this)">
-                        <div class="option-icon">⭐</div>
+                        <div class="option-icon"><img src="EstrelaAmarela.png" alt="Estrela Amarela"></div>
                         <div class="option-text">Estrela Amarela</div>
                     </div>
                 </div>
@@ -325,15 +326,15 @@
                 </div>
                 <div class="options">
                     <div class="option-btn" data-value="concha-branca" onclick="selectOption(3, 'concha-branca', this)">
-                        <div class="option-icon">🤍</div>
+                        <div class="option-icon"><img src="ConchaBranca.png" alt="Concha Branca"></div>
                         <div class="option-text">Concha Branca</div>
                     </div>
                     <div class="option-btn" data-value="concha-conica" onclick="selectOption(3, 'concha-conica', this)">
-                        <div class="option-icon">🐚</div>
+                        <div class="option-icon"><img src="ConchaConica.png" alt="Concha Cônica"></div>
                         <div class="option-text">Concha Cônica</div>
                     </div>
                     <div class="option-btn" data-value="estrela-amarela" onclick="selectOption(3, 'estrela-amarela', this)">
-                        <div class="option-icon">⭐</div>
+                        <div class="option-icon"><img src="EstrelaAmarela.png" alt="Estrela Amarela"></div>
                         <div class="option-text">Estrela Amarela</div>
                     </div>
                 </div>
@@ -359,7 +360,7 @@
         let selections = {
             step1: null,
             step2: null,
-            step3: null
+            step3:null
         };
 
         // Mapeamento das combinações para letras
@@ -376,141 +377,69 @@
 
         // Função para verificar quais opções são válidas para o próximo passo
         function getValidOptions(step) {
-            if (step === 1) {
-                // Primeiro passo: todas as opções são válidas
-                return ['concha', 'estrela'];
-            } else if (step === 2) {
-                // Segundo passo: todas as direções são válidas
-                return ['direita', 'esquerda'];
-            } else if (step === 3) {
-                // Terceiro passo: verificar quais combinações são válidas
-                const validOptions = [];
-                const step1Value = selections.step1;
-                const step2Value = selections.step2;
-                
-                const possibleStep3Values = ['concha-branca', 'concha-conica', 'estrela-amarela'];
-                
-                possibleStep3Values.forEach(step3Value => {
-                    const combinationKey = `${step1Value}-${step2Value}-${step3Value}`;
-                    if (combinations[combinationKey]) {
-                        validOptions.push(step3Value);
-                    }
+            if(step === 1) {
+                return ['concha','estrela'];
+            } else if(step === 2) {
+                return ['direita','esquerda'];
+            } else if(step === 3) {
+                const valid=[];
+                const s1=selections.step1;
+                const s2=selections.step2;
+                ['concha-branca','concha-conica','estrela-amarela'].forEach(v=>{
+                    if(combinations[`${s1}-${s2}-${v}`]) valid.push(v);
                 });
-                
-                return validOptions;
+                return valid;
             }
             return [];
         }
 
-        // Função para atualizar o estado das opções (habilitar/desabilitar)
         function updateOptionsState(step) {
-            const stepElement = document.getElementById(`step${step}`);
-            const options = stepElement.querySelectorAll('.option-btn');
-            const validOptions = getValidOptions(step);
-            
-            options.forEach(option => {
-                const value = option.getAttribute('data-value');
-                if (validOptions.includes(value)) {
-                    option.classList.remove('disabled');
-                    option.style.pointerEvents = 'auto';
+            const opts=document.querySelectorAll(`#step${step} .option-btn`);
+            const valid=getValidOptions(step);
+            opts.forEach(o=>{
+                const v=o.getAttribute('data-value');
+                if(valid.includes(v)) {
+                    o.classList.remove('disabled'); o.style.pointerEvents='auto';
                 } else {
-                    option.classList.add('disabled');
-                    option.style.pointerEvents = 'none';
+                    o.classList.add('disabled'); o.style.pointerEvents='none';
                 }
             });
         }
 
-        function selectOption(step, value, element) {
-            // Verificar se a opção está desabilitada
-            if (element.classList.contains('disabled')) {
-                return;
-            }
-
-            // Remove seleção anterior do mesmo passo
-            const stepElement = document.getElementById(`step${step}`);
-            const previousSelected = stepElement.querySelector('.option-btn.selected');
-            if (previousSelected) {
-                previousSelected.classList.remove('selected');
-            }
-
-            // Adiciona seleção atual
-            element.classList.add('selected');
-            selections[`step${step}`] = value;
-
-            // Marca o passo como completo e ativa o próximo
-            stepElement.classList.add('completed');
-            
-            if (step < 3) {
-                const nextStep = document.getElementById(`step${step + 1}`);
-                nextStep.classList.add('active');
-                
-                // Atualizar estado das opções do próximo passo
-                updateOptionsState(step + 1);
-            }
-
-            // Se todos os passos foram completados, mostra o resultado
-            if (selections.step1 && selections.step2 && selections.step3) {
-                showResult();
-            }
+        function selectOption(step,value,el) {
+            if(el.classList.contains('disabled')) return;
+            const st=document.getElementById(`step${step}`);
+            const prev=st.querySelector('.option-btn.selected');
+            if(prev) prev.classList.remove('selected');
+            el.classList.add('selected');
+            selections[`step${step}`]=value;
+            st.classList.add('completed');
+            if(step<3) { document.getElementById(`step${step+1}`).classList.add('active'); updateOptionsState(step+1);} 
+            if(selections.step1&&selections.step2&&selections.step3) showResult();
         }
 
         function showResult() {
-            // Cria a chave da combinação
-            const combinationKey = `${selections.step1}-${selections.step2}-${selections.step3}`;
-            const letter = combinations[combinationKey];
-
-            // Esconde o texto placeholder
-            const placeholderText = document.getElementById('placeholderText');
-            placeholderText.style.display = 'none';
-
-            // Mostra o resultado
-            const resultContent = document.getElementById('resultContent');
-            const resultLetter = document.getElementById('resultLetter');
-            const resultImage = document.getElementById('resultImage');
-
-            if (letter) {
-                resultLetter.textContent = `Mapa ${letter}`;
-                resultImage.src = `map${letter}.png`;
-                resultImage.style.display = 'block';
-            } else {
-                resultLetter.textContent = 'Combinação inválida';
-                resultImage.style.display = 'none';
-            }
-            
-            resultContent.classList.add('show');
+            const key=`${selections.step1}-${selections.step2}-${selections.step3}`;
+            const letter=combinations[key];
+            document.getElementById('placeholderText').style.display='none';
+            const rc=document.getElementById('resultContent');
+            const rl=document.getElementById('resultLetter');
+            const ri=document.getElementById('resultImage');
+            if(letter) { rl.textContent=`Mapa ${letter}`; ri.src=`map${letter}.png`; ri.style.display='block'; } else { rl.textContent='Combinação inválida'; ri.style.display='none'; }
+            rc.classList.add('show');
         }
 
         function resetSelection() {
-            // Reset das seleções
-            selections = {
-                step1: null,
-                step2: null,
-                step3: null
-            };
-
-            // Reset dos elementos visuais
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active', 'completed');
-            });
-            
-            document.querySelectorAll('.option-btn').forEach(btn => {
-                btn.classList.remove('selected', 'disabled');
-                btn.style.pointerEvents = 'auto';
-            });
-
+            selections={step1:null,step2:null,step3:null};
+            document.querySelectorAll('.step').forEach(s=>s.classList.remove('active','completed'));
+            document.querySelectorAll('.option-btn').forEach(b=>{b.classList.remove('selected','disabled');b.style.pointerEvents='auto';});
             document.getElementById('step1').classList.add('active');
-            
-            // Mostra placeholder e esconde resultado
-            document.getElementById('placeholderText').style.display = 'block';
+            document.getElementById('placeholderText').style.display='block';
             document.getElementById('resultContent').classList.remove('show');
-            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('resultImage').style.display='none';
         }
 
-        // Inicializar o estado das opções
-        document.addEventListener('DOMContentLoaded', function() {
-            updateOptionsState(1);
-        });
+        document.addEventListener('DOMContentLoaded',()=>updateOptionsState(1));
     </script>
 </body>
 </html>
-
